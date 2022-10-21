@@ -1,0 +1,7 @@
+push 1
+pop rax
+push 228
+pop [rax+1]
+push [2]
+out
+hlt
