@@ -1,7 +1,9 @@
-push 1
-pop rax
+push 0
 push 228
-pop [rax+1]
-push [2]
+push 0
+push 1
+
+out
+
 out
 hlt

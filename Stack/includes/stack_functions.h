@@ -11,7 +11,7 @@
 #endif
 
 /// enum type errors
-enum stack_errors {
+enum stack_errors { // TODO: <<
     NO_IMPORTANT_ERRORS = 1, ///< If no errors happened
     OVERFLOW = 2, ///< If there was stack overflow (realloc returned NULL in push)
     UNDERFLOW = 4, ///< If there was stack underflow (pop when size == 0) 

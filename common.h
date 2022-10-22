@@ -30,3 +30,7 @@ enum command_options {
     ARG_REG = 0X20,
     ARG_RAM = 0X40,
 };
+
+const int VERSION = 1; 
+
+const int SIGNATURE[3] = { 'S', 'B', VERSION };

@@ -9,15 +9,11 @@ enum cpu_errors {
     STACK_ERROR = 16,
     WRONG_EXE_FILE = 32,
     SEGMENTATION_FAULT = 64,
-};
-
-struct my_registers {
-    const char* regName;
-    elem_t value;
+    DEVIDE_BY_ZERO = 128,
 };
 
 struct my_cpu {
-    struct my_registers regs[5];
+    elem_t regs[5];
     struct stack st;
     elem_t ram[1000];
 
@@ -28,6 +24,6 @@ struct my_cpu {
 
 char* get_name_stdin(const char* text);
 
-int* get_buffer(const char* path);
+int* get_buffer(const char* path, unsigned int* sizeOfBuffer);
 
-cpu_errors run(int* instructionsBuffer);
+cpu_errors run(int* instructionsBuffer, const unsigned int size);

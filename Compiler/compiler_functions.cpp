@@ -9,13 +9,9 @@
 
 //TODO NO COPYPAST
 
-static const int version = 1;
+static const int poison = -1;
 
-static const int signature[3] = { 'S', 'B', version };
-
-static const char* regNames[] = {"null", "rax", "rbx", "rcx", "rdx" };
-
-static const unsigned int sizeOfLabels = 10;
+static const unsigned int sizeOfLabels = 100;
 
 static const int sizeOfRam = 1000;
 
@@ -23,7 +19,7 @@ static unsigned int currentLabel = 0;
 
 static unsigned const int sizeOfCommands = 25;
 
-static struct table_label labels[sizeOfLabels];
+static struct table_label labels[sizeOfLabels] = { {} }; 
 
 static void processor_of_errors(compiler_errors error, const char* command, const int fileLine, const char* function, const char* name, const int line) { 
     switch (error) {
@@ -72,7 +68,7 @@ static void processor_of_errors(compiler_errors error, const char* command, cons
 #define PRINT_ERROR(error) processor_of_errors(error, NULL, 0, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 #define compilation_errors(error, command, line) processor_of_errors(error, command, line, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 
-static void fill_labels(const int poison, const char* name) {
+static void fill_labels(const char* name) {
     if (name == NULL) {
         PRINT_ERROR(NULLPTR);
         return;
@@ -84,6 +80,7 @@ static void fill_labels(const int poison, const char* name) {
     }
 }
 
+// TODO copypasted from CPU!!!
 static bool file_is_open(FILE* stream) { //TODO use onegin lib
     if (stream == NULL) 
         return false;
@@ -228,21 +225,21 @@ static int make_label(char* str, const int ip) {
     int check = sscanf(str, "%d", &numberOfLabel);
 
     if (check > 0) {
-        if ((numberOfLabel < 0) || (labels[numberOfLabel].ip != -1)) 
+        if ((numberOfLabel < 0) || (labels[numberOfLabel].ip != poison)) 
             return -1;
 
         labels[numberOfLabel].ip = ip;
 
     } else {
-        if (find_label_in_table(str) != -1)
+        if (find_label_in_table(str) != poison)
             return -1;
 
         for (currentLabel = 0; currentLabel < sizeOfLabels; ++currentLabel) {
-            if (labels[currentLabel].ip == -1)
+            if (labels[currentLabel].ip == poison)
                 break;
         }
 
-        if ((currentLabel == sizeOfLabels - 1) && (labels[currentLabel].ip != -1))
+        if ((currentLabel == sizeOfLabels - 1) && (labels[currentLabel].ip != poison))
             return -1;
 
         labels[currentLabel].name = str;
@@ -388,12 +385,10 @@ static bool correct_push_and_pop_argument(char* argument, int* size) {
     if ((isNumber > 0) && (arg >= 0) && (arg < sizeOfRam) && (string_is_empty(argument + pos))) 
         return true;
     
-    for (long unsigned int regIndex = 0; regIndex < sizeof(regNames) / sizeof(regNames[0]); ++regIndex) {
-        if (strcmp(argument, regNames[regIndex]) == 0)
-            return true;
-    }
+    if (reg_number(argument) == -1)
+        return false;
 
-    return false;
+    return true;
 }
 
 static int get_reg_number_and_immed(char* argument, int* immed, int* regNumber) {
@@ -433,7 +428,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
         return -1;
     }
 
-    fill_labels(-1, "Noname");
+    fill_labels("Noname");
 
     int size = 0;
     bool hltFound = false;
@@ -560,9 +555,8 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
                 errorFound = true;
             }
 
-        } else if (strcmp(command, "jmp") == 0) {
-            go_to_label:
-
+        } else if ((strcmp(command, "jmp") == 0) || (strcmp(command, "jb") == 0) || (strcmp(command, "jbe") == 0) || (strcmp(command, "ja") == 0) 
+                || (strcmp(command, "jae") == 0) || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0)) {
             size += 2;
 
             int arg = get_jmp_args(array[arrayIndex] + pos);
@@ -583,10 +577,6 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
                 compilation_errors(FEW_ARGS, command, arrayIndex + 1);
                 errorFound = true;
             }  
-
-        } else if ((strcmp(command, "jb") == 0) || (strcmp(command, "jbe") == 0) || (strcmp(command, "ja") == 0) || (strcmp(command, "jae") == 0)
-                || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0)) {
-            goto go_to_label;
 
         } else if (strcmp(command, "hlt") == 0) {
             ++size;
@@ -966,7 +956,7 @@ compiler_errors get_exe_file(int* exeBuffer, const int sizeOfExeBuffer, const ch
         return FILE_WASNT_OPEN;
     }
 
-    fwrite(signature, sizeof(int), sizeof(signature) / sizeof(signature[0]), exeFile);
+    fwrite(SIGNATURE, sizeof(int), sizeof(SIGNATURE) / sizeof(SIGNATURE[0]), exeFile);
     fwrite(exeBuffer, sizeof(int), sizeOfExeBuffer, exeFile);
 
     fclose(exeFile);

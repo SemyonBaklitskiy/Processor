@@ -1,5 +1,6 @@
 .PHONY: compile run clean_compile
 
+# TODO: do dependencies
 
 bin/compiler_functions.o: 
 	g++ -Wall -Wextra -c Compiler/compiler_functions.cpp -o bin/compiler_functions.o
