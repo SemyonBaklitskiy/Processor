@@ -12,10 +12,10 @@ int main() {
 
     free(exeFilePath);
 
-    cpu_errors error = run(instructionsBuffer, sizeOfBuffer);
+    allErrors error = run(instructionsBuffer, sizeOfBuffer);
     free(instructionsBuffer);
 
-    if (error != NO_ERRORS_IN_CPU) 
+    if (error != NOERRORS) 
         return -1;
 
     return 0;
