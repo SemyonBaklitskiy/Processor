@@ -1,0 +1,8 @@
+In file Stack/src/stack_functions.cpp in function stack_errors stack_pop(stack*, elem_t*) on line 439 stack_dump called
+Stack "cpu->st" created in file CPU/cpu_functions.cpp in function my_cpu* cpu_constructor(const char*, const char*, unsigned int) on line 341
+Size = 0
+Capacity = 1
+Pointer to buffer = 0x557a5e496d10
+Errors:
+   Stack underflow
+data[0] = -0.000000

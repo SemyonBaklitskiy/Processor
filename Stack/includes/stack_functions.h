@@ -1,4 +1,4 @@
-#define INT
+#define DOUBLE
 
 #ifdef INT
     typedef int elem_t;

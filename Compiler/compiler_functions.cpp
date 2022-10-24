@@ -3,6 +3,7 @@
 #include <cctype>
 #include "../Common/common_functions.h"
 #include "compiler_functions.h"
+#include "../Stack/includes/stack_functions.h"
 
 //TODO NO COPYPAST
 
@@ -17,6 +18,8 @@ static unsigned const int sizeOfCommands = 25;
 static struct table_label labels[sizeOfLabels] = { {} }; 
 
 #define compilation_errors(error, command, line) processor_of_errors(error, command, line, __FILE__, __PRETTY_FUNCTION__, __LINE__)
+#define INSERT_INT(data) *((int*)(exeBuffer + intDataCounter * sizeof(int) + elemtDataCounter * (sizeof(elem_t)))) = data; ++intDataCounter
+#define INSERT_ELEM_T(data) *((elem_t*)(exeBuffer + intDataCounter * sizeof(int) + elemtDataCounter * (sizeof(elem_t)))) = argument; ++elemtDataCounter
 
 static void fill_labels(const char* name);
 static int amount_of_lines(char* buffer);
@@ -25,13 +28,13 @@ static int find_label_in_table(const char* labelName);
 static int get_label(char* labelName);
 static int get_jmp_args(const char* args);
 static bool is_label(const char* str);
-static int make_label(char* str, const int ip);
+static int make_label(char* str, const long int ip);
 static bool correct_forward_labels(char** array, const int sizeOfArray);
 static int reg_number(const char* argument);
 static bool check_all_options(char* argument);
-static bool correct_push_and_pop_argument(char* argument, int* size);
+static bool correct_push_and_pop_argument(char* argument, long int* size);
 static int get_reg_number_and_immed(char* argument, int* immed, int* regNumber);
-static int exe_buffer_size_and_check(char** array, const int sizeOfArray);
+static long int exe_buffer_size_and_check(char** array, const int sizeOfArray);
 
 char* get_buffer(const char* path) {
     if (path == NULL) 
@@ -96,18 +99,18 @@ char** get_array_of_lines(char* buffer, int* amountOfLines) {
     return array;
 }
 
-int* get_exe_buffer(char** array, const int sizeOfArray, int* sizeOfExeBuffer) { //mb common
+char* get_exe_buffer(char** array, const int sizeOfArray, long int* sizeOfExeBuffer) {
     if ((array == NULL) || (sizeOfExeBuffer == NULL)) {
         PRINT_ERROR(NULLPTR_COMMON);
         return NULL;
     }
 
-    int size = exe_buffer_size_and_check(array, sizeOfArray);
+    long int size = exe_buffer_size_and_check(array, sizeOfArray);
 
     if (size == -1)
         return NULL;
 
-    int* exeBuffer = (int*)calloc(size, sizeof(int));
+    char* exeBuffer = (char*)calloc(size, sizeof(char));
 
     if (exeBuffer == NULL) {
         PRINT_ERROR(RETURNED_NULL_COMMON);
@@ -116,7 +119,8 @@ int* get_exe_buffer(char** array, const int sizeOfArray, int* sizeOfExeBuffer) {
 
     *sizeOfExeBuffer = size;
 
-    unsigned int bufferIndex = 0;
+    unsigned int intDataCounter = 0;
+    unsigned int elemtDataCounter = 0; 
 
     for (int arrayIndex = 0; arrayIndex < sizeOfArray; ++arrayIndex) {
         char command[25] = "";
@@ -125,11 +129,11 @@ int* get_exe_buffer(char** array, const int sizeOfArray, int* sizeOfExeBuffer) {
         sscanf(array[arrayIndex], " %s %n ", command, &pos);
 
         if (strcmp(command, "push") == 0) {
-            int argument = 0;
+            elem_t argument = 0.0;
 
-            if (sscanf(array[arrayIndex] + pos, " %d ", &argument) > 0) {
-                exeBuffer[bufferIndex++] = CMD_PUSH | ARG_IMMED;
-                exeBuffer[bufferIndex++] = argument;
+            if (sscanf(array[arrayIndex] + pos, " %lf ", &argument) > 0) {
+                INSERT_INT(CMD_PUSH | ARG_IMMED);
+                INSERT_ELEM_T(argument);
 
            } else {
                 char arg[sizeOfCommands] = "";
@@ -180,19 +184,19 @@ int* get_exe_buffer(char** array, const int sizeOfArray, int* sizeOfExeBuffer) {
                     return NULL;
 
                 if (allOptions) {
-                    exeBuffer[bufferIndex++] = options;
-                    exeBuffer[bufferIndex++] = val;
-                    exeBuffer[bufferIndex++] = immed;
+                    INSERT_INT(options);
+                    INSERT_INT(val);
+                    INSERT_INT(immed);
 
                 } else {
-                    exeBuffer[bufferIndex++] = options;
-                    exeBuffer[bufferIndex++] = val;
+                    INSERT_INT(options);
+                    INSERT_INT(val);
                 }
            }
 
         } else if (strcmp(command, "pop") == 0) {
             if (string_is_empty(array[arrayIndex] + pos)) {
-                exeBuffer[bufferIndex++] = CMD_POP | ARG_IMMED;
+                INSERT_INT(CMD_POP | ARG_IMMED);
 
             } else {
                char arg[sizeOfCommands] = "";
@@ -248,78 +252,78 @@ int* get_exe_buffer(char** array, const int sizeOfArray, int* sizeOfExeBuffer) {
                 }
 
                 if (allOptions) {
-                    exeBuffer[bufferIndex++] = options;
-                    exeBuffer[bufferIndex++] = val;
-                    exeBuffer[bufferIndex++] = immed;
+                    INSERT_INT(options);
+                    INSERT_INT(val);
+                    INSERT_INT(immed);
                     
                 } else {
-                    exeBuffer[bufferIndex++] = options;
-                    exeBuffer[bufferIndex++] = val;
+                    INSERT_INT(options);
+                    INSERT_INT(val);
                 }
             }
 
         } else if (strcmp(command, "add") == 0) {
-            exeBuffer[bufferIndex++] = CMD_ADD;
+            INSERT_INT(CMD_ADD);
 
         } else if (strcmp(command, "sub") == 0) {
-            exeBuffer[bufferIndex++] = CMD_SUB;
+            INSERT_INT(CMD_SUB);
 
         } else if (strcmp(command, "mul") == 0) {
-            exeBuffer[bufferIndex++] = CMD_MUL;
+            INSERT_INT(CMD_MUL);
 
         } else if (strcmp(command, "div") == 0) {
-            exeBuffer[bufferIndex++] = CMD_DIV;
+            INSERT_INT(CMD_DIV);
 
         } else if (strcmp(command, "out") == 0) {
-            exeBuffer[bufferIndex++] = CMD_OUT;
+            INSERT_INT(CMD_OUT);
 
         } else if (strcmp(command, "hlt") == 0) {
-            exeBuffer[bufferIndex++] = CMD_HLT;
+            INSERT_INT(CMD_HLT);
 
         } else if (strcmp(command, "dup") == 0) {
-            exeBuffer[bufferIndex++] = CMD_DUP;
+            INSERT_INT(CMD_DUP);
 
         } else if (strcmp(command, "jmp") == 0) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
-            exeBuffer[bufferIndex++] = CMD_JMP;
-            exeBuffer[bufferIndex++] = arg; 
+            INSERT_INT(CMD_JMP);
+            INSERT_INT(arg); 
 
         } else if (strcmp(command, "jb") == 0) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
-            exeBuffer[bufferIndex++] = CMD_JB;
-            exeBuffer[bufferIndex++] = arg;
+            INSERT_INT(CMD_JB);
+            INSERT_INT(arg);
 
         } else if (strcmp(command, "jbe") == 0) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
-            exeBuffer[bufferIndex++] = CMD_JBE;
-            exeBuffer[bufferIndex++] = arg;
+            INSERT_INT(CMD_JBE);
+            INSERT_INT(arg);
 
         } else if (strcmp(command, "ja") == 0) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
-            exeBuffer[bufferIndex++] = CMD_JA;
-            exeBuffer[bufferIndex++] = arg;
+            INSERT_INT(CMD_JA);
+            INSERT_INT(arg);
 
         } else if (strcmp(command, "jae") == 0) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
-            exeBuffer[bufferIndex++] = CMD_JAE;
-            exeBuffer[bufferIndex++] = arg;
+            INSERT_INT(CMD_JAE);
+            INSERT_INT(arg);
 
         } else if (strcmp(command, "je") == 0) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
-            exeBuffer[bufferIndex++] = CMD_JE;
-            exeBuffer[bufferIndex++] = arg;
+            INSERT_INT(CMD_JE);
+            INSERT_INT(arg);
 
         } else if (strcmp(command, "jne") == 0) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
-            exeBuffer[bufferIndex++] = CMD_JNE;
-            exeBuffer[bufferIndex++] = arg;
+            INSERT_INT(CMD_JNE);
+            INSERT_INT(arg);
 
         } else if (string_is_empty(array[arrayIndex])) {
             continue;
@@ -332,7 +336,7 @@ int* get_exe_buffer(char** array, const int sizeOfArray, int* sizeOfExeBuffer) {
     return exeBuffer;
 }
 
-allErrors get_exe_file(int* exeBuffer, const int sizeOfExeBuffer, const char* path) {
+allErrors get_exe_file(char* exeBuffer, const long int sizeOfExeBuffer, const char* path) {
     if ((exeBuffer == NULL) || (path == NULL)) {
         PRINT_ERROR(NULLPTR_COMMON);
         return NULLPTR_COMMON;
@@ -345,8 +349,8 @@ allErrors get_exe_file(int* exeBuffer, const int sizeOfExeBuffer, const char* pa
         return FILE_WASNT_OPEN_COMMON;
     }
 
-    fwrite(SIGNATURE, sizeof(int), sizeof(SIGNATURE) / sizeof(SIGNATURE[0]), exeFile);
-    fwrite(exeBuffer, sizeof(int), sizeOfExeBuffer, exeFile);
+    fwrite(SIGNATURE, sizeof(char), sizeof(SIGNATURE), exeFile);
+    fwrite(exeBuffer, sizeof(char), sizeOfExeBuffer, exeFile);
 
     fclose(exeFile);
 
@@ -447,7 +451,7 @@ static bool is_label(const char* str) {
     return !((str[strlen(str) - 1] != ':') || (strlen(str) <= 1));
 }
 
-static int make_label(char* str, const int ip) {
+static int make_label(char* str, const long int ip) {
     str[strlen(str) - 1] = '\0';
 
     while (isspace(*str))
@@ -548,6 +552,7 @@ static bool check_all_options(char* argument) {
 
     int number = 0;
     int nextPos = 0;
+
     int isNumberStr1 = sscanf(str1, " %d %n", &number, &nextPos);
     int isNumberStr2 = sscanf(str2, " %d %n", &number, &nextPos);
 
@@ -578,7 +583,7 @@ static bool check_all_options(char* argument) {
     return true;
 }
 
-static bool correct_push_and_pop_argument(char* argument, int* size) { 
+static bool correct_push_and_pop_argument(char* argument, long int* size) { 
     if ((argument[0] == '[') && (argument[strlen(argument) - 1] == ']')) {
         argument[strlen(argument) - 1] = '\0';
         ++argument;
@@ -586,13 +591,16 @@ static bool correct_push_and_pop_argument(char* argument, int* size) {
         bool allOptions = check_all_options(argument);
 
         if (allOptions) {
-            *(size) += 1;
+            *(size) += 2 * sizeof(int);
             return true;
         }
     }
 
+    *size += sizeof(int);
+
     int arg = 0;
     int pos = 0;
+
     int isNumber = sscanf(argument, " %d %n ", &arg, &pos);
 
     if ((isNumber > 0) && (arg >= 0) && (arg < sizeOfRam) && (string_is_empty(argument + pos))) 
@@ -630,10 +638,10 @@ static int get_reg_number_and_immed(char* argument, int* immed, int* regNumber) 
     return 0;
 }
 
-static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
+static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
     fill_labels("Noname");
 
-    int size = 0;
+    long int size = 0;
     bool hltFound = false;
     bool errorFound = false;
     bool hasForwardLabels = false;
@@ -645,11 +653,11 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
         sscanf(array[arrayIndex], " %s %n ", command, &pos);
 
         if (strcmp(command, "push") == 0) {
-            size += 2; 
-            int argument = 0;
+            size += sizeof(commands); 
+            elem_t argument = 0.0;
 
             int nextPos = 0;
-            int checkForArgs = sscanf(array[arrayIndex] + pos, " %d %n", &argument, &nextPos);
+            int checkForArgs = sscanf(array[arrayIndex] + pos, " %lf %n", &argument, &nextPos);
 
             if (string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(FEW_ARGS, command, arrayIndex + 1);
@@ -675,16 +683,19 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }   else if ((checkForArgs > 0) && !(string_is_empty(array[arrayIndex] + pos + nextPos))) {
                 compilation_errors(WRONG_ARGS, command, arrayIndex + 1);
                 errorFound = true;
+
+            } else {
+                size += sizeof(elem_t);
             }
 
         } else if (strcmp(command, "pop") == 0) {
-            int argument = 0;
+            elem_t argument = 0.0;
+            size += sizeof(commands);
 
             int nextPos = 0;
-            int checkForArgs = sscanf(array[arrayIndex] + pos, " %d %n", &argument, &nextPos);
+            int checkForArgs = sscanf(array[arrayIndex] + pos, " %lf %n", &argument, &nextPos);
 
             if (string_is_empty(array[arrayIndex] + pos)) {
-                ++size;
                 continue;
                 
             } else if (checkForArgs <= 0)  {
@@ -701,7 +712,6 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
                     errorFound = true;
                     
                 } else {
-                    size += 2;
                     continue;
                 }
                 
@@ -711,7 +721,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "add") == 0) {
-            ++size;
+            size += sizeof(commands);
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -719,7 +729,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "sub") == 0) {
-            ++size;
+            size += sizeof(commands);
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -727,7 +737,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "mul") == 0) {
-            ++size;
+            size += sizeof(commands);
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -735,7 +745,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "div") == 0) {
-            ++size;
+            size += sizeof(commands);
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -743,7 +753,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "out") == 0) {
-            ++size;
+            size += sizeof(commands);
 
             if (!string_is_empty(array[arrayIndex] + pos)) { 
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -751,7 +761,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "dup") == 0) {
-            ++size;
+            size += sizeof(commands);
 
             if (!string_is_empty(array[arrayIndex] + pos)) { 
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -760,7 +770,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
 
         } else if ((strcmp(command, "jmp") == 0) || (strcmp(command, "jb") == 0) || (strcmp(command, "jbe") == 0) || (strcmp(command, "ja") == 0) 
                 || (strcmp(command, "jae") == 0) || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0)) {
-            size += 2;
+            size += 2 * sizeof(commands);
 
             int arg = get_jmp_args(array[arrayIndex] + pos);
             char argName[sizeOfCommands] = "";
@@ -782,7 +792,7 @@ static int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }  
 
         } else if (strcmp(command, "hlt") == 0) {
-            ++size;
+            size += sizeof(commands);
             hltFound = true;
 
             if (!string_is_empty(array[arrayIndex] + pos)) {

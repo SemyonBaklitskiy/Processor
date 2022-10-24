@@ -11,6 +11,6 @@ struct my_cpu {
     unsigned int line;
 };
 
-int* get_buffer(const char* path, unsigned int* sizeOfBuffer); 
+char* get_buffer(const char* path, long unsigned int* sizeOfBuffer); 
 
-allErrors run(int* instructionsBuffer, const unsigned int size);
+allErrors run(char* instructionsBuffer, const long unsigned int size);

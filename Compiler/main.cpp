@@ -17,15 +17,14 @@ int main() {
     char** arrayOfLines = get_array_of_lines(buffer, &amountOfLines);
     CHECK(arrayOfLines, buffer)
 
-    int sizeOfExeBuffer = 0;
-    int* exeBuffer = get_exe_buffer(arrayOfLines, amountOfLines, &sizeOfExeBuffer);
+    long int sizeOfExeBuffer = 0;
+    char* exeBuffer = get_exe_buffer(arrayOfLines, amountOfLines, &sizeOfExeBuffer);
     CHECK(exeBuffer, arrayOfLines, free(buffer))
 
     free(arrayOfLines);
     free(buffer);
 
     char* exeFilePath = get_name_stdin("Enter path to the executable file: ");
-
     GET_EXE_FILE(exeBuffer, sizeOfExeBuffer, exeFilePath);
 
     free(exeFilePath);

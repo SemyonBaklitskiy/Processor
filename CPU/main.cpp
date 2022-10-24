@@ -3,9 +3,9 @@
 
 int main() {
     char* exeFilePath = get_name_stdin("Enter the executable file path: ");
-    unsigned int sizeOfBuffer = 0;
+    long unsigned int sizeOfBuffer = 0;
 
-    int* instructionsBuffer = get_buffer(exeFilePath, &sizeOfBuffer);
+    char* instructionsBuffer = get_buffer(exeFilePath, &sizeOfBuffer);
 
     if (instructionsBuffer == NULL) 
         return -1;

@@ -3,11 +3,11 @@
 #include <unistd.h>
 #include "common_functions.h"
 
-bool file_exist(FILE* stream) { //common
+bool file_exist(FILE* stream) {
     return stream != NULL;   
 }
 
-long unsigned int get_file_size(FILE* stream) { // check type of args
+long unsigned int get_file_size(FILE* stream) {
     struct stat buf = {};
     fstat(stream->_fileno, &buf);
 
@@ -63,7 +63,7 @@ char* get_buffer(const char* path) {
 #ifdef CPU
 
 char* get_buffer(const char* path, long unsigned int* sizeOfBuffer) { //check type of args
-    if (path == NULL) 
+    if ((path == NULL) || (sizeOfBuffer == NULL)) 
         PRINT_ERROR(NULLPTR_COMMON);
 
     FILE* file = fopen(path, "rb");
@@ -91,7 +91,7 @@ char* get_buffer(const char* path, long unsigned int* sizeOfBuffer) { //check ty
     }
 
     fread(buffer, sizeof(char), size - sizeof(SIGNATURE), file);
-    *sizeOfBuffer = (size - sizeof(SIGNATURE)) / sizeof(elem_t);
+    *sizeOfBuffer = size - sizeof(SIGNATURE);
 
     fclose(file);
     return buffer;

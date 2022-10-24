@@ -28,8 +28,8 @@ out
 out
 
 next:
-push 15
-push 30
+push 15.1
+push 30.4
 div
 out
 
