@@ -3,6 +3,7 @@
 #include <unistd.h>
 #include "common_functions.h"
 
+
 bool file_exist(FILE* stream) {
     return stream != NULL;   
 }
@@ -27,77 +28,6 @@ char* get_name_stdin(const char* text) {
     
     return name;
 }
-
-#ifdef COMPILER
-
-char* get_buffer(const char* path) {
-    if (path == NULL) 
-        PRINT_ERROR(NULLPTR_COMMON);
-    
-
-    FILE* file = fopen(path, "r");
-
-    if (!file_exist(file)) {
-        PRINT_ERROR(FILE_WASNT_OPEN_COMMON);
-        return NULL;
-    }
-
-    long unsigned int size = get_file_size(file);
-
-    char* buffer = (char*)calloc(size + 1, sizeof(char));
-
-    if (buffer == NULL) {
-        PRINT_ERROR(RETURNED_NULL_COMMON);
-        return NULL;
-    }
-
-    fread(buffer, sizeof(char), size, file);
-    buffer[size] = '\0';
-
-    fclose(file);
-    return buffer;
-}
-
-#endif
-
-#ifdef CPU
-
-char* get_buffer(const char* path, long unsigned int* sizeOfBuffer) { //check type of args
-    if ((path == NULL) || (sizeOfBuffer == NULL)) 
-        PRINT_ERROR(NULLPTR_COMMON);
-
-    FILE* file = fopen(path, "rb");
-
-    if (!file_exist(file)) {
-        PRINT_ERROR(FILE_WASNT_OPEN_COMMON);
-        return NULL;
-    }
-
-    long unsigned int size = get_file_size(file);
-
-    if (size < sizeof(SIGNATURE)) {
-        PRINT_ERROR(WRONG_EXE_FILE);
-        return NULL;
-    }
-
-    if (!correct_signature(file)) 
-        return NULL;
-
-    char* buffer = (char*)calloc(size - sizeof(SIGNATURE), sizeof(char)); 
-
-    if (buffer == NULL) {
-        PRINT_ERROR(RETURNED_NULL_COMMON);
-        return NULL;
-    }
-
-    fread(buffer, sizeof(char), size - sizeof(SIGNATURE), file);
-    *sizeOfBuffer = size - sizeof(SIGNATURE);
-
-    fclose(file);
-    return buffer;
-}
-
-#endif
 
 void processor_of_errors(allErrors error, const char* command, const int fileLine, const char* function, const char* name, const int line) { 
     switch (error) {
@@ -152,6 +82,14 @@ void processor_of_errors(allErrors error, const char* command, const int fileLin
 
     case DEVISION_BY_ZERO:
         printf("In file %s function %s line %d: devision by zero\n", function, name, line);
+        break;
+
+    case WRONG_RAM_ARGS:
+        printf("In file %s function %s line %d: ram error\n", function, name, line);
+        break;
+
+    case SOME_ERROR:
+        printf("In file %s function %s line %d: something went wrong, programm finished\n", function, name, line);
         break;
 
     default:

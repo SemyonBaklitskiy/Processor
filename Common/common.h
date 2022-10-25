@@ -1,5 +1,7 @@
 #pragma once
 
+typedef double elem_t;
+
 enum commands {
     CMD_HLT  = 0,
     CMD_PUSH = 1,
@@ -22,18 +24,20 @@ enum commands {
 enum allErrors {
     NOERRORS               = 0,
     FILE_WASNT_OPEN_COMMON = 1,
-    RETURNED_NULL_COMMON   = 2,    // 1 << 1
-    NULLPTR_COMMON         = 4,
-    SYNTAX_ERROR           = 8,
-    HLT_NOT_FOUND          = 16,
-    FEW_ARGS               = 32,
-    MANY_ARGS              = 64,
-    LABEL_ERROR            = 128,
-    WRONG_ARGS             = 256,
-    STACK_ERROR            = 512,
-    WRONG_EXE_FILE         = 1024,
-    SEGMENTATION_FAULT     = 2048,
-    DEVISION_BY_ZERO       = 4096,
+    RETURNED_NULL_COMMON   = 2,
+    NULLPTR_COMMON         = 3,
+    SYNTAX_ERROR           = 4,
+    HLT_NOT_FOUND          = 5,
+    FEW_ARGS               = 6,
+    MANY_ARGS              = 7,
+    LABEL_ERROR            = 8,
+    WRONG_ARGS             = 9,
+    STACK_ERROR            = 10,
+    WRONG_EXE_FILE         = 11,
+    SEGMENTATION_FAULT     = 12,
+    DEVISION_BY_ZERO       = 13,
+    WRONG_RAM_ARGS         = 14,
+    SOME_ERROR             = 15,
 };
 
 enum reg {
@@ -50,8 +54,6 @@ enum command_options {
     ARG_RAM   = 0X40,
 };
 
-const int VERSION = 1; 
-const int SIGNATURE[3] = { 'S', 'B', VERSION };
 const int amountOfRegs = 5;
 const int sizeOfRam = 1000;
 

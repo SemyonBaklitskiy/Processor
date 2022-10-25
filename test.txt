@@ -1,41 +1,27 @@
+jmp continue
+
+continue:
+
+push -3.14
+push 2
+
 jmp next
 
-0:
-push 10
-out
-
-push 15
-pop rax
-
-push rax; fbdfbdaabnanaer
-out 
-
-push 228
-pop [0]
+1:
+push 1000
 
 push 1
 pop rbx
-
-push 1000
-
-pop [rbx+1]
-
-push [0]
-;push [rbx+1]
-push [2]
-
-out
-out
+push 20.4
+pop [rbx]
+push [1]
 
 next:
-push 15.1
-push 30.4
-div
+
 out
 
-push 1
-push 0
+push 100
 
-jb :0
+ja 1
 
 hlt

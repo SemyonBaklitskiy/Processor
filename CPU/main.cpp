@@ -15,8 +15,5 @@ int main() {
     allErrors error = run(instructionsBuffer, sizeOfBuffer);
     free(instructionsBuffer);
 
-    if (error != NOERRORS) 
-        return -1;
-
-    return 0;
+    return error;
 }

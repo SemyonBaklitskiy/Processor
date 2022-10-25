@@ -3,7 +3,6 @@
 #include <cctype>
 #include "../Common/common_functions.h"
 #include "compiler_functions.h"
-#include "../Stack/includes/stack_functions.h"
 
 //TODO NO COPYPAST
 
@@ -31,7 +30,7 @@ static bool is_label(const char* str);
 static int make_label(char* str, const long int ip);
 static bool correct_forward_labels(char** array, const int sizeOfArray);
 static int reg_number(const char* argument);
-static bool check_all_options(char* argument);
+static int check_all_options(char* argument);
 static bool correct_push_and_pop_argument(char* argument, long int* size);
 static int get_reg_number_and_immed(char* argument, int* immed, int* regNumber);
 static long int exe_buffer_size_and_check(char** array, const int sizeOfArray);
@@ -532,11 +531,11 @@ static int reg_number(const char* argument) {
     
 }
 
-static bool check_all_options(char* argument) {
+static int check_all_options(char* argument) {
     char* posOfPlus = strchr(argument, '+');
 
     if ((posOfPlus == NULL) || (posOfPlus == argument)) 
-        return false;  
+        return 0;  
 
     char str2[sizeOfCommands] = "";
     char str1[sizeOfCommands] = "";
@@ -548,7 +547,7 @@ static bool check_all_options(char* argument) {
     sscanf(argument, " %s ", str1);
 
     if (!string_is_empty(posOfPlus + 1 + pos)) 
-        return false;
+        return -1;
 
     int number = 0;
     int nextPos = 0;
@@ -557,30 +556,30 @@ static bool check_all_options(char* argument) {
     int isNumberStr2 = sscanf(str2, " %d %n", &number, &nextPos);
 
     if ((isNumberStr1 > 0) && (isNumberStr2 > 0)) {
-        return false;
+        return -1;
 
     } else if ((isNumberStr1 <= 0) && (isNumberStr2 <= 0)) {
-        return false;
+        return -1;
 
     } else if ((isNumberStr1 > 0) && (string_is_empty(str1 + nextPos))) {
         int regNumber = reg_number(str2);
 
         if (regNumber == -1)
-            return false;
+            return -1;
 
     } else if ((isNumberStr2 > 0) && (string_is_empty(str2 + nextPos))) {
         int regNumber = reg_number(str1);
 
         if (regNumber == -1)
-            return false;
+            return -1;
 
     } else {
-        return false;
+        return -1;
     }
 
     posOfPlus[0] = '+';
 
-    return true;
+    return 1;
 }
 
 static bool correct_push_and_pop_argument(char* argument, long int* size) { 
@@ -588,15 +587,18 @@ static bool correct_push_and_pop_argument(char* argument, long int* size) {
         argument[strlen(argument) - 1] = '\0';
         ++argument;
 
-        bool allOptions = check_all_options(argument);
+        int allOptions = check_all_options(argument);
 
-        if (allOptions) {
-            *(size) += 2 * sizeof(int);
+        if (allOptions == 1) {
+            *(size) += 2 * sizeOfInt;
             return true;
+
+        } else if (allOptions == -1) {
+            return false;
         }
     }
 
-    *size += sizeof(int);
+    *size += sizeOfInt;
 
     int arg = 0;
     int pos = 0;
@@ -653,7 +655,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
         sscanf(array[arrayIndex], " %s %n ", command, &pos);
 
         if (strcmp(command, "push") == 0) {
-            size += sizeof(commands); 
+            size += sizeOfInt; 
             elem_t argument = 0.0;
 
             int nextPos = 0;
@@ -685,12 +687,12 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
                 errorFound = true;
 
             } else {
-                size += sizeof(elem_t);
+                size += sizeOfElemt;
             }
 
         } else if (strcmp(command, "pop") == 0) {
             elem_t argument = 0.0;
-            size += sizeof(commands);
+            size += sizeOfInt;
 
             int nextPos = 0;
             int checkForArgs = sscanf(array[arrayIndex] + pos, " %lf %n", &argument, &nextPos);
@@ -721,7 +723,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "add") == 0) {
-            size += sizeof(commands);
+            size += sizeOfInt;
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -729,7 +731,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "sub") == 0) {
-            size += sizeof(commands);
+            size += sizeOfInt;
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -737,7 +739,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "mul") == 0) {
-            size += sizeof(commands);
+            size += sizeOfInt;
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -745,7 +747,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "div") == 0) {
-            size += sizeof(commands);
+            size += sizeOfInt;
 
             if (!string_is_empty(array[arrayIndex] + pos)) {
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -753,7 +755,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "out") == 0) {
-            size += sizeof(commands);
+            size += sizeOfInt;
 
             if (!string_is_empty(array[arrayIndex] + pos)) { 
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -761,7 +763,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if (strcmp(command, "dup") == 0) {
-            size += sizeof(commands);
+            size += sizeOfInt;
 
             if (!string_is_empty(array[arrayIndex] + pos)) { 
                 compilation_errors(MANY_ARGS, command, arrayIndex + 1);
@@ -770,7 +772,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
 
         } else if ((strcmp(command, "jmp") == 0) || (strcmp(command, "jb") == 0) || (strcmp(command, "jbe") == 0) || (strcmp(command, "ja") == 0) 
                 || (strcmp(command, "jae") == 0) || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0)) {
-            size += 2 * sizeof(commands);
+            size += 2 * sizeOfInt;
 
             int arg = get_jmp_args(array[arrayIndex] + pos);
             char argName[sizeOfCommands] = "";
@@ -792,7 +794,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }  
 
         } else if (strcmp(command, "hlt") == 0) {
-            size += sizeof(commands);
+            size += sizeOfInt;
             hltFound = true;
 
             if (!string_is_empty(array[arrayIndex] + pos)) {

@@ -67,50 +67,68 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
     while ((INT_INSTRUCTIONS_BUFFER(ip) != CMD_HLT) && (ip < size)) {
         if (COMMAND_PUSH) {
             if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_PUSH | ARG_IMMED | ARG_RAM)) {
-                if ((INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands)) >= sizeOfRam) || (INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands)) < 0)) {
+                int val = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+                if ((val >= sizeOfRam) || (val < 0)) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
                     PRINT_ERROR(SEGMENTATION_FAULT);
                     return SEGMENTATION_FAULT;
                 }
 
-                push(&cpu->st, cpu->ram[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))]);
-                ip += 2 * sizeof(commands);
+                push(&cpu->st, cpu->ram[val]);
+                ip += 2 * sizeOfInt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_PUSH | ARG_IMMED)) {
-                push(&cpu->st, ELEM_T_INSTRUCTIONS_BUFFER(ip + sizeof(commands)));
-                ip += sizeof(commands) + sizeof(elem_t);
+                push(&cpu->st, ELEM_T_INSTRUCTIONS_BUFFER(ip + sizeOfInt));
+                ip += sizeOfInt + sizeOfElemt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_PUSH | ARG_REG | ARG_RAM)) {
-                if ((cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] >= sizeOfRam) || (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] < 0)) {
+                int val = (int)cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)];
+
+                if ((val >= sizeOfRam) || (val < 0)) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
                     PRINT_ERROR(SEGMENTATION_FAULT);
                     return SEGMENTATION_FAULT;
 
-                } else if ((int)cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] != cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))]) {
-                    PRINT_ERROR(WRONG_ARGS);
-                    return WRONG_ARGS;
+                } else if (val != cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)]) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
+                    PRINT_ERROR(WRONG_RAM_ARGS);
+                    return WRONG_RAM_ARGS;
                 }
 
-                push(&cpu->st, cpu->ram[(int)cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))]]);
-                ip += 2 * sizeof(commands);
+                push(&cpu->st, cpu->ram[val]);
+                ip += 2 * sizeOfInt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_PUSH | ARG_REG)) {
-                push(&cpu->st, cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))]);
-                ip += 2 * sizeof(commands);
+                push(&cpu->st, cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)]);
+                ip += 2 * sizeOfInt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_PUSH | ARG_RAM | ARG_REG | ARG_IMMED)) {
-                if ((cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)) >= sizeOfRam) || 
-                    (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)) < 0)) {
-                        
+                int val = (int)(cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeOfInt));
+
+                if ((val >= sizeOfRam) || (val < 0)) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
                     PRINT_ERROR(SEGMENTATION_FAULT);
                     return SEGMENTATION_FAULT;
 
-                } else if (((int)cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands))) != 
-                                (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)))) {
-                    PRINT_ERROR(WRONG_ARGS);
-                    return WRONG_ARGS;
+                } else if ((val) != (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeOfInt))) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
+                    PRINT_ERROR(WRONG_RAM_ARGS);
+                    return WRONG_RAM_ARGS;
                 }
 
-                push(&cpu->st, cpu->ram[(int)(cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)))]);
-                ip = 3 * sizeof(commands);
+                push(&cpu->st, cpu->ram[val]);
+                ip += 3 * sizeOfInt;
             }
 
         } else if (COMMAND_POP) {
@@ -118,60 +136,78 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
                 elem_t element = 0.0;
                 pop(&cpu->st, &element);
 
-                if ((INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands)) >= sizeOfRam) || (INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands)) < 0)) {
+                int val = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+                if ((val >= sizeOfRam) || (val < 0)) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
                     PRINT_ERROR(SEGMENTATION_FAULT);
                     return SEGMENTATION_FAULT;
                 }
 
-                cpu->ram[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] = element;
-                ip += 2 * sizeof(commands);
+                cpu->ram[val] = element;
+                ip += 2 * sizeOfInt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_POP | ARG_IMMED)) {
                 elem_t element = 0.0;
                 pop(&cpu->st, &element);
-                ip += sizeof(commands);
+                ip += sizeOfInt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_POP | ARG_REG | ARG_RAM)) {
                 elem_t element = 0.0;
                 pop(&cpu->st, &element);
 
-                if ((cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] >= sizeOfRam) || (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] < 0)) {
+                int val = (int)cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)];
+
+                if ((val >= sizeOfRam) || (val < 0)) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
                     PRINT_ERROR(SEGMENTATION_FAULT);
                     return SEGMENTATION_FAULT;
 
-                } else if ((int)cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] != cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))]) {
-                    PRINT_ERROR(WRONG_ARGS);
-                    return WRONG_ARGS;
+                } else if (val != cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)]) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
+                    PRINT_ERROR(WRONG_RAM_ARGS);
+                    return WRONG_RAM_ARGS;
                 }
 
-                cpu->ram[(int)cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))]] = element;
-                ip += 2 * sizeof(commands);
+                cpu->ram[val] = element;
+                ip += 2 * sizeOfInt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_POP | ARG_REG)) {
                 elem_t element = 0.0;
                 pop(&cpu->st, &element);
-                cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] = element;
+                cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)] = element;
 
-                ip += 2 * sizeof(commands);
+                ip += 2 * sizeOfInt;
 
             } else if (INT_INSTRUCTIONS_BUFFER(ip) == (CMD_POP | ARG_RAM | ARG_REG | ARG_IMMED)) {
-                if ((cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)) >= sizeOfRam) || 
-                    (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)) < 0)) {
+                int val = (int)(cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeOfInt));
+
+                if ((val >= sizeOfRam) || (val < 0)) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
 
                     PRINT_ERROR(SEGMENTATION_FAULT);
                     return SEGMENTATION_FAULT;
 
-                } else if ((int)(cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands))) != 
-                                (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)))) {
-                    PRINT_ERROR(WRONG_ARGS);
-                    return WRONG_ARGS;
+                } else if ((val) != (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeOfInt))) {
+                    stack_destor(&cpu->st);
+                    free(cpu);
+
+                    PRINT_ERROR(WRONG_RAM_ARGS);
+                    return WRONG_RAM_ARGS;
                 }
 
                 elem_t element = 0.0;
                 pop(&cpu->st, &element);
 
-                cpu->ram[(int)(cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands))] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeof(commands)))] = element;
-                ip += 3 * sizeof(commands);
+                cpu->ram[val] = element;
+                ip += 3 * sizeOfInt;
             }
             
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_ADD) {
@@ -182,7 +218,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &secondElement);
             push(&cpu->st, firstElement + secondElement);
 
-            ip += sizeof(commands);
+            ip += sizeOfInt;
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_SUB) {
             elem_t firstElement = 0.0;
@@ -192,7 +228,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &secondElement);
             push(&cpu->st, firstElement - secondElement);
 
-            ip += sizeof(commands);
+            ip += sizeOfInt;
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_MUL) {
             elem_t firstElement = 0;
@@ -202,7 +238,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &secondElement);
             push(&cpu->st, firstElement * secondElement);
 
-            ip += sizeof(commands);
+            ip += sizeOfInt;
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_DIV) {
             elem_t firstElement = 0.0;
@@ -212,20 +248,23 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &secondElement);
 
             if (secondElement == 0.0) {
+                stack_destor(&cpu->st);
+                free(cpu);
+
                 PRINT_ERROR(DEVISION_BY_ZERO);
                 return DEVISION_BY_ZERO;
             }
 
             push(&cpu->st, firstElement / secondElement);
 
-            ip += sizeof(commands);
+            ip += sizeOfInt;
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_OUT) {
             elem_t element = 0.0;
             pop(&cpu->st, &element);
             printf("%lf\n", element);
 
-            ip += sizeof(commands);
+            ip += sizeOfInt;
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_DUP) {
             elem_t element = 0.0;
@@ -233,10 +272,10 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             push(&cpu->st, element);
             push(&cpu->st, element);
 
-            ip += sizeof(commands);
+            ip += sizeOfInt;
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_JMP) {
-            ip = INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands));
+            ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_JB) {
             elem_t firstElement = 0.0;
@@ -245,8 +284,12 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement < secondElement)
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands));
+            if (firstElement < secondElement) {
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_JBE) {
             elem_t firstElement = 0.0;
@@ -255,8 +298,12 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement <= secondElement)
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands));
+            if (firstElement <= secondElement) {
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_JA) {
             elem_t firstElement = 0.0;
@@ -265,8 +312,12 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement > secondElement)
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands));
+            if (firstElement > secondElement) {
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_JAE) {
             elem_t firstElement = 0.0;
@@ -275,8 +326,12 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement >= secondElement)
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands));
+            if (firstElement >= secondElement) {
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_JE) {
             elem_t firstElement = 0.0;
@@ -285,8 +340,12 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement == secondElement)
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands));
+            if (firstElement == secondElement) {
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
 
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_JNE) {
             elem_t firstElement = 0.0;
@@ -295,11 +354,19 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement != secondElement)
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeof(commands));
+            if (firstElement != secondElement) {
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
 
         } else {
-
+            stack_destor(&cpu->st);
+            free(cpu);
+            
+            PRINT_ERROR(SOME_ERROR);
+            return SOME_ERROR;
         }
     }
 

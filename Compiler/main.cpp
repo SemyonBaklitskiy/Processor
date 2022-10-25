@@ -1,4 +1,3 @@
-#include <stdio.h>
 #include <stdlib.h>
 #include "compiler_functions.h"
 
@@ -30,6 +29,5 @@ int main() {
     free(exeFilePath);
     free(exeBuffer);
 
-    printf("Success!\n");
     return 0;
 }
