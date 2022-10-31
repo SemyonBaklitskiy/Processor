@@ -1,0 +1,152 @@
+call Input
+
+call Get_double_a; ram[0] = 2a
+call Get_minus_b; ram[1] = -b
+call Get_discriminant; rdx = D
+
+push 0
+push rax
+call_e Linear_solution
+
+push 0
+push rdx
+call_b No_solutions
+
+call General_Solution
+hlt
+
+
+
+Input:
+in
+pop rax; rax = a
+
+in 
+pop rbx; rbx = b
+
+in
+pop rcx; rcx = c
+ret
+
+Get_double_a:
+push 2
+push rax
+mul
+pop [0]; ram[0] = 2a
+ret
+
+Get_minus_b:
+push -1
+push rbx; 
+mul
+pop [1]; ram [1] = -b
+ret
+
+Get_discriminant:
+push rbx
+dup
+mul; b^2
+
+push -4
+push rax
+mul; -4a
+
+push rcx
+mul; -4ac
+
+add; b^2-4ac
+pop rdx; rdx = D
+ret
+
+Infinity_solutions:
+push INFINITY
+out
+hlt
+
+Trivial:
+push 0
+push rcx
+call_e Infinity_solutions
+
+push 0
+out
+hlt
+
+No_solutions:
+push 0
+out
+hlt
+
+Linear_solution:
+push 0
+push rbx
+call_e Trivial
+
+push 1
+out
+
+push [1]; -b
+
+push rcx
+div; -c/b
+out
+
+hlt
+
+One_solution:
+push 1
+out
+
+push [0]; 2a
+push [1]; -b
+div
+out
+
+hlt
+
+Get_sqrt_D:
+push rdx
+sqrt
+pop [2]; ram [2] = sqrt(D)
+ret
+
+First_solution:
+push [0]; 2a
+push [1]; -b
+push [2]; sqrt(D)
+
+add
+div
+
+out
+ret
+
+Second_solution:
+push [0]; 2a
+push [1]; -b
+push [2]; sqrt(D)
+push -1
+mul; -sqrt(D)
+
+add
+div
+
+out
+ret
+
+General_Solution:
+push 0
+push rdx
+call_e One_solution
+
+push 2
+out
+
+call Get_sqrt_D
+
+call First_solution
+call Second_solution
+
+ret
+
+

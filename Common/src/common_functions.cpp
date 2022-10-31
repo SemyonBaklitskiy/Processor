@@ -69,7 +69,7 @@ void processor_of_errors(allErrors error, const char* command, const int fileLin
         break;
 
     case STACK_ERROR:
-        printf("Error(s) in stack happened. Look at the log.txt\n");
+        printf("Error(s) in stack happened. Look at the Output_files/log.txt\n");
         break;
 
     case WRONG_EXE_FILE:
@@ -90,6 +90,14 @@ void processor_of_errors(allErrors error, const char* command, const int fileLin
 
     case SOME_ERROR:
         printf("In file %s function %s line %d: something went wrong, programm finished\n", function, name, line);
+        break;
+
+    case WRONG_INPUT:
+        printf("In file %s function %s line %d: wrong input\n", function, name, line);
+        break;  
+
+    case SQRT_ERROR:
+        printf("In file %s function %s line %d: the square root of a negative number\n", function, name, line);
         break;
 
     default:

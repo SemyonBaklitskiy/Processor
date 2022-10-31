@@ -1,9 +1,10 @@
-#include "../Common/common.h"
-#include "../Stack/includes/stack_functions.h"
+#include "common.h"
+#include "stack_functions.h"
 
 struct my_cpu {
     elem_t regs[amountOfRegs];
     struct stack st;
+    struct stack stRet;
     elem_t ram[sizeOfRam];
 
     const char* fileName;

@@ -1,7 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <cctype>
-#include "../Common/common_functions.h"
+#include "common_functions.h"
 #include "compiler_functions.h"
 
 //TODO NO COPYPAST
@@ -324,6 +324,57 @@ char* get_exe_buffer(char** array, const int sizeOfArray, long int* sizeOfExeBuf
             INSERT_INT(CMD_JNE);
             INSERT_INT(arg);
 
+        } else if (strcmp(command, "call") == 0) {
+            int arg = get_jmp_args(array[arrayIndex] + pos);
+
+            INSERT_INT(CMD_CALL);
+            INSERT_INT(arg);
+
+        } else if (strcmp(command, "ret") == 0) {
+            INSERT_INT(CMD_RET);
+
+        } else if (strcmp(command, "in") == 0) {
+            INSERT_INT(CMD_IN);
+
+        } else if (strcmp(command, "sqrt") == 0) {
+            INSERT_INT(CMD_SQRT);
+
+        } else if (strcmp(command, "call_b") == 0) {
+            int arg = get_jmp_args(array[arrayIndex] + pos);
+
+            INSERT_INT(CMD_CALL_B);
+            INSERT_INT(arg);
+
+        } else if (strcmp(command, "call_be") == 0) {
+            int arg = get_jmp_args(array[arrayIndex] + pos);
+
+            INSERT_INT(CMD_CALL_BE);
+            INSERT_INT(arg);
+
+        } else if (strcmp(command, "call_a") == 0) {
+            int arg = get_jmp_args(array[arrayIndex] + pos);
+
+            INSERT_INT(CMD_CALL_A);
+            INSERT_INT(arg);
+
+        } else if (strcmp(command, "call_ae") == 0) {
+            int arg = get_jmp_args(array[arrayIndex] + pos);
+
+            INSERT_INT(CMD_CALL_AE);
+            INSERT_INT(arg);
+
+        } else if (strcmp(command, "call_e") == 0) {
+            int arg = get_jmp_args(array[arrayIndex] + pos);
+
+            INSERT_INT(CMD_CALL_E);
+            INSERT_INT(arg); 
+
+        } else if (strcmp(command, "call_ne") == 0) {
+            int arg = get_jmp_args(array[arrayIndex] + pos);
+
+            INSERT_INT(CMD_CALL_NE);
+            INSERT_INT(arg);
+        
         } else if (string_is_empty(array[arrayIndex])) {
             continue;
 
@@ -495,8 +546,10 @@ static bool correct_forward_labels(char** array, const int sizeOfArray) {
 
         sscanf(array[arrayIndex], " %s %n ", command, &pos);
 
-        if ((strcmp(command, "jmp") == 0) || (strcmp(command, "jb") == 0) || (strcmp(command, "jbe") == 0) || (strcmp(command, "ja") == 0) || (strcmp(command, "jae") == 0)
-         || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0)) {
+        if (((strcmp(command, "jmp") == 0) || (strcmp(command, "jb") == 0) || (strcmp(command, "jbe") == 0) || (strcmp(command, "ja") == 0) 
+             || (strcmp(command, "jae") == 0) || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0) || (strcmp(command, "call") == 0)
+             || (strcmp(command, "call_b") == 0) || (strcmp(command, "call_be") == 0) || (strcmp(command, "call_a") == 0)
+             || (strcmp(command, "call_ae") == 0) || (strcmp(command, "call_e") == 0) || strcmp(command, "call_ne") == 0)) {
             int arg = get_jmp_args(array[arrayIndex] + pos);
 
             if (arg == -1) {
@@ -771,7 +824,9 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             }
 
         } else if ((strcmp(command, "jmp") == 0) || (strcmp(command, "jb") == 0) || (strcmp(command, "jbe") == 0) || (strcmp(command, "ja") == 0) 
-                || (strcmp(command, "jae") == 0) || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0)) {
+                || (strcmp(command, "jae") == 0) || (strcmp(command, "je") == 0) || (strcmp(command, "jne") == 0) || (strcmp(command, "call") == 0)
+                || (strcmp(command, "call_b") == 0) || (strcmp(command, "call_be") == 0) || (strcmp(command, "call_a") == 0)
+                || (strcmp(command, "call_ae") == 0) || (strcmp(command, "call_e") == 0) || strcmp(command, "call_ne") == 0) {
             size += 2 * sizeOfInt;
 
             int arg = get_jmp_args(array[arrayIndex] + pos);
@@ -791,7 +846,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
             } else if (arg == -2) {
                 compilation_errors(FEW_ARGS, command, arrayIndex + 1);
                 errorFound = true;
-            }  
+            }
 
         } else if (strcmp(command, "hlt") == 0) {
             size += sizeOfInt;
@@ -812,6 +867,30 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
                 compilation_errors(LABEL_ERROR, command, arrayIndex + 1);
                 errorFound = true;
             } 
+
+        } else if (strcmp(command, "ret") == 0) {
+            if (!string_is_empty(array[arrayIndex] + pos)) {
+                compilation_errors(MANY_ARGS, command, arrayIndex + 1);
+                errorFound = true;
+            }
+
+            size += sizeOfInt;
+
+        } else if (strcmp(command, "in") == 0) {
+            if (!string_is_empty(array[arrayIndex] + pos)) {
+                compilation_errors(MANY_ARGS, command, arrayIndex + 1);
+                errorFound = true;
+            }
+
+            size += sizeOfInt;
+
+        } else if (strcmp(command, "sqrt") == 0) {
+            if (!string_is_empty(array[arrayIndex] + pos)) {
+                compilation_errors(MANY_ARGS, command, arrayIndex + 1);
+                errorFound = true;
+            }
+
+            size += sizeOfInt;
 
         } else if (string_is_empty(array[arrayIndex])) {
             continue;

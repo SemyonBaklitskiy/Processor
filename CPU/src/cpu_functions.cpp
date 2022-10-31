@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 #include "cpu_functions.h"
-#include "../Common/common_functions.h"
-// TODO do not use relative pathes, use `g++ ... -I../Stack/includes` 
+#include "common_functions.h"
 
 #define stack_destor(pointer) if (stack_destructor(pointer) != NO_IMPORTANT_ERRORS) { PRINT_ERROR(STACK_ERROR); return STACK_ERROR; }
 #define stack_ctor(pointer, capacity) if (stack_constructor(pointer, capacity, VARNAME(pointer),__FILE__, __PRETTY_FUNCTION__, __LINE__) != NO_IMPORTANT_ERRORS) { PRINT_ERROR(STACK_ERROR); return NULL; } 
@@ -13,8 +13,12 @@
 #define INT_INSTRUCTIONS_BUFFER(ip) *((int*)(instructionsBuffer + ip)) 
 #define ELEM_T_INSTRUCTIONS_BUFFER(ip) *((elem_t*)(instructionsBuffer + ip)) 
 
+static const unsigned int defaultCapacityOfSt = 4;
+static const unsigned int defaultCapacityOfRetSt = 2; 
+
 static bool correct_signature(FILE* file);
 static struct my_cpu* cpu_constructor(const char* fileName, const char* functionName, unsigned int line);
+static bool equal_two_numbers(const elem_t first, const elem_t second);
 
 char* get_buffer(const char* path, long unsigned int* sizeOfBuffer) { 
     if (path == NULL) 
@@ -71,6 +75,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 if ((val >= sizeOfRam) || (val < 0)) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(SEGMENTATION_FAULT);
@@ -89,6 +94,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 if ((val >= sizeOfRam) || (val < 0)) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(SEGMENTATION_FAULT);
@@ -96,6 +102,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 } else if (val != cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)]) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(WRONG_RAM_ARGS);
@@ -114,6 +121,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 if ((val >= sizeOfRam) || (val < 0)) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(SEGMENTATION_FAULT);
@@ -121,6 +129,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 } else if ((val) != (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeOfInt))) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(WRONG_RAM_ARGS);
@@ -140,6 +149,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 if ((val >= sizeOfRam) || (val < 0)) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(SEGMENTATION_FAULT);
@@ -163,12 +173,14 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
                 if ((val >= sizeOfRam) || (val < 0)) {
                     stack_destor(&cpu->st);
                     free(cpu);
+                    stack_destor(&cpu->stRet);
 
                     PRINT_ERROR(SEGMENTATION_FAULT);
                     return SEGMENTATION_FAULT;
 
                 } else if (val != cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)]) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(WRONG_RAM_ARGS);
@@ -190,6 +202,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 if ((val >= sizeOfRam) || (val < 0)) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(SEGMENTATION_FAULT);
@@ -197,6 +210,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
 
                 } else if ((val) != (cpu->regs[INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt)] + INT_INSTRUCTIONS_BUFFER(ip + 2 * sizeOfInt))) {
                     stack_destor(&cpu->st);
+                    stack_destor(&cpu->stRet);
                     free(cpu);
 
                     PRINT_ERROR(WRONG_RAM_ARGS);
@@ -247,11 +261,13 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (secondElement == 0.0) {
+            if (equal_two_numbers(secondElement, 0.0)) {
+                PRINT_ERROR(DEVISION_BY_ZERO);
+
                 stack_destor(&cpu->st);
+                stack_destor(&cpu->stRet);
                 free(cpu);
 
-                PRINT_ERROR(DEVISION_BY_ZERO);
                 return DEVISION_BY_ZERO;
             }
 
@@ -340,7 +356,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement == secondElement) {
+            if (equal_two_numbers(firstElement, secondElement)) {
                 ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
 
             } else {
@@ -354,15 +370,150 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             pop(&cpu->st, &firstElement);
             pop(&cpu->st, &secondElement);
 
-            if (firstElement != secondElement) {
+            if (!equal_two_numbers(firstElement, secondElement)) {
                 ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
 
             } else {
                 ip += 2 * sizeOfInt;
             }
 
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL) {
+            push(&cpu->stRet, ip + 2 * sizeOfInt);
+            ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_B) {
+            elem_t firstElement = 0.0;
+            elem_t secondElement = 0.0;
+
+            pop(&cpu->st, &firstElement);
+            pop(&cpu->st, &secondElement);
+
+            if (firstElement < secondElement) {
+                push(&cpu->stRet, ip + 2 * sizeOfInt);
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_BE) {
+            elem_t firstElement = 0.0;
+            elem_t secondElement = 0.0;
+
+            pop(&cpu->st, &firstElement);
+            pop(&cpu->st, &secondElement);
+
+            if (firstElement <= secondElement) {
+                push(&cpu->stRet, ip + 2 * sizeOfInt);
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_A) {
+            elem_t firstElement = 0.0;
+            elem_t secondElement = 0.0;
+
+            pop(&cpu->st, &firstElement);
+            pop(&cpu->st, &secondElement);
+
+            if (firstElement > secondElement) {
+                push(&cpu->stRet, ip + 2 * sizeOfInt);
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_AE) {
+            elem_t firstElement = 0.0;
+            elem_t secondElement = 0.0;
+
+            pop(&cpu->st, &firstElement);
+            pop(&cpu->st, &secondElement);
+
+            if (firstElement >= secondElement) {
+                push(&cpu->stRet, ip + 2 * sizeOfInt);
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_E) {
+            elem_t firstElement = 0.0;
+            elem_t secondElement = 0.0;
+
+            pop(&cpu->st, &firstElement);
+            pop(&cpu->st, &secondElement);
+
+            if (equal_two_numbers(firstElement, secondElement)) {
+                push(&cpu->stRet, ip + 2 * sizeOfInt);
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_NE) {
+            elem_t firstElement = 0.0;
+            elem_t secondElement = 0.0;
+
+            pop(&cpu->st, &firstElement);
+            pop(&cpu->st, &secondElement);
+
+            if (!equal_two_numbers(firstElement, secondElement)) {
+                push(&cpu->stRet, ip + 2 * sizeOfInt);
+                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
+
+            } else {
+                ip += 2 * sizeOfInt;
+            }
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_RET) {
+            elem_t retIp = 0.0;
+            pop(&cpu->stRet, &retIp);
+
+            ip = (unsigned long int)retIp;
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_IN) {
+            elem_t val = 0.0;
+            int correctInput = scanf("%lf", &val);
+            
+            if (correctInput == 0) {
+                PRINT_ERROR(WRONG_INPUT);
+
+                stack_destor(&cpu->st);
+                stack_destor(&cpu->stRet);
+                free(cpu);
+
+                return WRONG_INPUT;
+            }
+
+            push(&cpu->st, val);
+            ip += sizeOfInt;
+
+        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_SQRT) {
+            elem_t val = 0.0;
+            pop(&cpu->st, &val);
+
+            if (val < 0) {
+                PRINT_ERROR(SQRT_ERROR);
+
+                stack_destor(&cpu->st);
+                stack_destor(&cpu->stRet);
+                free(cpu);
+
+                return SQRT_ERROR;
+            }
+
+            push(&cpu->st, sqrt(val));
+            ip += sizeOfInt;
+
         } else {
             stack_destor(&cpu->st);
+            stack_destor(&cpu->stRet);
             free(cpu);
             
             PRINT_ERROR(SOME_ERROR);
@@ -371,6 +522,7 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
     }
 
     stack_destor(&cpu->st);
+    stack_destor(&cpu->stRet);
     free(cpu);
     return NOERRORS;
 }
@@ -386,7 +538,8 @@ static struct my_cpu* cpu_constructor(const char* fileName, const char* function
     cpu->fileName = fileName;
     cpu->functionName = functionName;
     cpu->line = line;
-    stack_ctor(&cpu->st, 2);
+    stack_ctor(&cpu->st, defaultCapacityOfSt);
+    stack_ctor(&cpu->stRet, defaultCapacityOfRetSt);
     
     for (long unsigned int regIndex = 0; regIndex < sizeof(cpu->regs) / sizeof(cpu->regs[0]); ++regIndex) 
         cpu->regs[regIndex] = 0;
@@ -404,4 +557,10 @@ static bool correct_signature(FILE* file) {
     }
 
     return true;
+}
+
+static bool equal_two_numbers(const elem_t first, const elem_t second) {
+    const elem_t epsilon = 0.00001;
+
+    return (fabs(first - second) <= epsilon);
 }

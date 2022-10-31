@@ -1,4 +1,4 @@
-#include "../Common/common.h"
+#include "common.h"
 
 struct table_label {
     long int ip;

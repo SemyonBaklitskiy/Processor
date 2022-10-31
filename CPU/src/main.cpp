@@ -7,8 +7,10 @@ int main() {
 
     char* instructionsBuffer = get_buffer(exeFilePath, &sizeOfBuffer);
 
-    if (instructionsBuffer == NULL) 
+    if (instructionsBuffer == NULL) {
+        free(exeFilePath);
         return -1;
+    }
 
     free(exeFilePath);
 
