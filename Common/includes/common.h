@@ -23,12 +23,6 @@ enum commands {
     CMD_RET     = 20,
     CMD_IN      = 21,
     CMD_SQRT    = 22,
-    CMD_CALL_B  = 23,
-    CMD_CALL_BE = 24,
-    CMD_CALL_A  = 25,
-    CMD_CALL_AE = 26,
-    CMD_CALL_E  = 27,
-    CMD_CALL_NE = 28,
 };
 
 enum allErrors {
@@ -68,5 +62,6 @@ enum command_options {
 
 const int sizeOfRam = 1000;
 const int amountOfRegs = 5;
+const int sizeOfLabels = 100;
 
 char* get_name_stdin(const char* text);

@@ -1,8 +1,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <stdlib.h>
 #include "common_functions.h"
-
 
 bool file_exist(FILE* stream) {
     return stream != NULL;   
@@ -103,4 +103,53 @@ void processor_of_errors(allErrors error, const char* command, const int fileLin
     default:
         return;
     }
+}
+
+char* get_buffer(const char* path, long unsigned int* sizeOfBuffer) { 
+    if ((path == NULL) || (sizeOfBuffer == NULL)) {
+        PRINT_ERROR(NULLPTR_COMMON);
+        return NULL;
+    }
+
+    FILE* file = fopen(path, "rb");
+
+    if (!file_exist(file)) {
+        PRINT_ERROR(FILE_WASNT_OPEN_COMMON);
+        return NULL;
+    }
+
+    long unsigned int size = get_file_size(file);
+
+    if (size < sizeof(SIGNATURE)) {
+        PRINT_ERROR(WRONG_EXE_FILE);
+        return NULL;
+    }
+
+    if (!correct_signature(file)) 
+        return NULL;
+
+    char* buffer = (char*)calloc(size - sizeof(SIGNATURE), sizeof(char)); 
+
+    if (buffer == NULL) {
+        PRINT_ERROR(RETURNED_NULL_COMMON);
+        return NULL;
+    }
+
+    fread(buffer, sizeof(char), size - sizeof(SIGNATURE), file);
+    *sizeOfBuffer = size - sizeof(SIGNATURE);
+
+    fclose(file);
+    return buffer;
+}
+
+bool correct_signature(FILE* file) {
+    int fileSignature[3] = { 0, 0, 0 };
+    fread(fileSignature, sizeof(char), sizeof(fileSignature), file);
+
+    if ((fileSignature[0] != SIGNATURE[0]) || (fileSignature[1] != SIGNATURE[1]) || (fileSignature[2] > SIGNATURE[2])) {
+        PRINT_ERROR(WRONG_EXE_FILE);
+        return false;
+    }
+
+    return true;
 }

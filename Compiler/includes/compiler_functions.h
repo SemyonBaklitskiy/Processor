@@ -5,7 +5,7 @@ struct table_label {
     const char* name; 
 };
 
-char* get_buffer(const char* path); 
+char* get_buffer_compiler(const char* path); 
 
 char** get_array_of_lines(char* buffer, int* amountOfLines);
 

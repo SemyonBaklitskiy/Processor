@@ -7,7 +7,7 @@
 int main() {
     char* sourceFilePath = get_name_stdin("Enter path to the source file: ");
 
-    char* buffer = get_buffer(sourceFilePath);
+    char* buffer = get_buffer_compiler(sourceFilePath);
     CHECK(buffer, sourceFilePath)
 
     free(sourceFilePath);

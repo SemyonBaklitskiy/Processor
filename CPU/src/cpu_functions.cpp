@@ -8,54 +8,13 @@
 #define stack_ctor(pointer, capacity) if (stack_constructor(pointer, capacity, VARNAME(pointer),__FILE__, __PRETTY_FUNCTION__, __LINE__) != NO_IMPORTANT_ERRORS) { PRINT_ERROR(STACK_ERROR); return NULL; } 
 #define push(pointer, element) if (stack_push(pointer, element) != NO_IMPORTANT_ERRORS) { PRINT_ERROR(STACK_ERROR); return STACK_ERROR; } 
 #define pop(pointer, element) if (stack_pop(pointer, element) != NO_IMPORTANT_ERRORS) { PRINT_ERROR(STACK_ERROR); return STACK_ERROR; }
-#define COMMAND_PUSH (instructionsBuffer[ip] == (CMD_PUSH | ARG_IMMED)) || (instructionsBuffer[ip] == (CMD_PUSH | ARG_REG)) || (instructionsBuffer[ip] == (CMD_PUSH | ARG_REG | ARG_RAM)) || (instructionsBuffer[ip] == (CMD_PUSH | ARG_RAM | ARG_IMMED)) || (instructionsBuffer[ip] == (CMD_PUSH | ARG_RAM | ARG_REG | ARG_IMMED))
-#define COMMAND_POP (instructionsBuffer[ip] == (CMD_POP | ARG_IMMED)) || (instructionsBuffer[ip] == (CMD_POP | ARG_REG)) || (instructionsBuffer[ip] == (CMD_POP | ARG_REG | ARG_RAM)) || (instructionsBuffer[ip] == (CMD_POP | ARG_RAM | ARG_IMMED)) || (instructionsBuffer[ip] == (CMD_POP | ARG_RAM | ARG_REG | ARG_IMMED))
-#define INT_INSTRUCTIONS_BUFFER(ip) *((int*)(instructionsBuffer + ip)) 
-#define ELEM_T_INSTRUCTIONS_BUFFER(ip) *((elem_t*)(instructionsBuffer + ip)) 
 
 static const unsigned int defaultCapacityOfSt = 4;
 static const unsigned int defaultCapacityOfRetSt = 2; 
-
-static bool correct_signature(FILE* file);
 static struct my_cpu* cpu_constructor(const char* fileName, const char* functionName, unsigned int line);
 static bool equal_two_numbers(const elem_t first, const elem_t second);
 
-char* get_buffer(const char* path, long unsigned int* sizeOfBuffer) { 
-    if (path == NULL) 
-        PRINT_ERROR(NULLPTR_COMMON);
-
-    FILE* file = fopen(path, "rb");
-
-    if (!file_exist(file)) {
-        PRINT_ERROR(FILE_WASNT_OPEN_COMMON);
-        return NULL;
-    }
-
-    long unsigned int size = get_file_size(file);
-
-    if (size < sizeof(SIGNATURE)) {
-        PRINT_ERROR(WRONG_EXE_FILE);
-        return NULL;
-    }
-
-    if (!correct_signature(file)) 
-        return NULL;
-
-    char* buffer = (char*)calloc(size - sizeof(SIGNATURE), sizeof(char)); 
-
-    if (buffer == NULL) {
-        PRINT_ERROR(RETURNED_NULL_COMMON);
-        return NULL;
-    }
-
-    fread(buffer, sizeof(char), size - sizeof(SIGNATURE), file);
-    *sizeOfBuffer = size - sizeof(SIGNATURE);
-
-    fclose(file);
-    return buffer;
-}
-
-allErrors run(char* instructionsBuffer, const long unsigned int size) {
+allErrors run(const char* instructionsBuffer, const long unsigned int size) {
     if (instructionsBuffer == NULL) {
         PRINT_ERROR(NULLPTR_COMMON);
         return NULLPTR_COMMON;
@@ -381,96 +340,6 @@ allErrors run(char* instructionsBuffer, const long unsigned int size) {
             push(&cpu->stRet, ip + 2 * sizeOfInt);
             ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
 
-        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_B) {
-            elem_t firstElement = 0.0;
-            elem_t secondElement = 0.0;
-
-            pop(&cpu->st, &firstElement);
-            pop(&cpu->st, &secondElement);
-
-            if (firstElement < secondElement) {
-                push(&cpu->stRet, ip + 2 * sizeOfInt);
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
-
-            } else {
-                ip += 2 * sizeOfInt;
-            }
-
-        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_BE) {
-            elem_t firstElement = 0.0;
-            elem_t secondElement = 0.0;
-
-            pop(&cpu->st, &firstElement);
-            pop(&cpu->st, &secondElement);
-
-            if (firstElement <= secondElement) {
-                push(&cpu->stRet, ip + 2 * sizeOfInt);
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
-
-            } else {
-                ip += 2 * sizeOfInt;
-            }
-
-        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_A) {
-            elem_t firstElement = 0.0;
-            elem_t secondElement = 0.0;
-
-            pop(&cpu->st, &firstElement);
-            pop(&cpu->st, &secondElement);
-
-            if (firstElement > secondElement) {
-                push(&cpu->stRet, ip + 2 * sizeOfInt);
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
-
-            } else {
-                ip += 2 * sizeOfInt;
-            }
-
-        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_AE) {
-            elem_t firstElement = 0.0;
-            elem_t secondElement = 0.0;
-
-            pop(&cpu->st, &firstElement);
-            pop(&cpu->st, &secondElement);
-
-            if (firstElement >= secondElement) {
-                push(&cpu->stRet, ip + 2 * sizeOfInt);
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
-
-            } else {
-                ip += 2 * sizeOfInt;
-            }
-
-        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_E) {
-            elem_t firstElement = 0.0;
-            elem_t secondElement = 0.0;
-
-            pop(&cpu->st, &firstElement);
-            pop(&cpu->st, &secondElement);
-
-            if (equal_two_numbers(firstElement, secondElement)) {
-                push(&cpu->stRet, ip + 2 * sizeOfInt);
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
-
-            } else {
-                ip += 2 * sizeOfInt;
-            }
-
-        } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_CALL_NE) {
-            elem_t firstElement = 0.0;
-            elem_t secondElement = 0.0;
-
-            pop(&cpu->st, &firstElement);
-            pop(&cpu->st, &secondElement);
-
-            if (!equal_two_numbers(firstElement, secondElement)) {
-                push(&cpu->stRet, ip + 2 * sizeOfInt);
-                ip = INT_INSTRUCTIONS_BUFFER(ip + sizeOfInt);
-
-            } else {
-                ip += 2 * sizeOfInt;
-            }
-
         } else if (INT_INSTRUCTIONS_BUFFER(ip) == CMD_RET) {
             elem_t retIp = 0.0;
             pop(&cpu->stRet, &retIp);
@@ -546,18 +415,6 @@ static struct my_cpu* cpu_constructor(const char* fileName, const char* function
 
     return cpu;
 } 
-
-static bool correct_signature(FILE* file) {
-    int fileSignature[3] = { 0, 0, 0 };
-    fread(fileSignature, sizeof(char), sizeof(fileSignature), file);
-
-    if ((fileSignature[0] != SIGNATURE[0]) || (fileSignature[1] != SIGNATURE[1]) || (fileSignature[2] > SIGNATURE[2])) {
-        PRINT_ERROR(WRONG_EXE_FILE);
-        return false;
-    }
-
-    return true;
-}
 
 static bool equal_two_numbers(const elem_t first, const elem_t second) {
     const elem_t epsilon = 0.00001;

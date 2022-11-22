@@ -13,5 +13,4 @@ struct my_cpu {
 };
 
 char* get_buffer(const char* path, long unsigned int* sizeOfBuffer); 
-
-allErrors run(char* instructionsBuffer, const long unsigned int size);
+allErrors run(const char* instructionsBuffer, const long unsigned int size);
