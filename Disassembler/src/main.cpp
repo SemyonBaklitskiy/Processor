@@ -13,6 +13,8 @@ int main() {
         return -1;
     }
 
+    free(exeFilePath);
+
     char* outFilePath = get_name_stdin("Enter path to the disassemble file: ");
 
     allErrors error = disassemble(exeBuffer, sizeOfExeBuffer, outFilePath);
