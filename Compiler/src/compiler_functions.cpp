@@ -662,7 +662,7 @@ static long int exe_buffer_size_and_check(char** array, const int sizeOfArray) {
     bool hasForwardLabels = false;
 
     for (int arrayIndex = 0; arrayIndex < sizeOfArray; ++arrayIndex) {
-        char command[sizeOfCommands] = "";
+        char command[sizeOfCommands] = " ";
         int pos = 0;
 
         sscanf(array[arrayIndex], " %s %n ", command, &pos);

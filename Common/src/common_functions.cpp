@@ -122,11 +122,14 @@ char* get_buffer(const char* path, long unsigned int* sizeOfBuffer) {
 
     if (size < sizeof(SIGNATURE)) {
         PRINT_ERROR(WRONG_EXE_FILE);
+        fclose(file);
         return NULL;
     }
 
-    if (!correct_signature(file)) 
+    if (!correct_signature(file)) {
+        fclose(file);
         return NULL;
+    }
 
     char* buffer = (char*)calloc(size - sizeof(SIGNATURE), sizeof(char)); 
 

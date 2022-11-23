@@ -1,0 +1,144 @@
+call input
+
+push 0
+push rax
+
+je linear
+
+call quadratic_solution
+hlt
+
+linear:
+    call linear_solution
+hlt
+
+input:
+    in
+    in
+    in
+
+    pop rcx
+    pop rbx
+    pop rax
+ret
+
+linear_solution:
+    push 0
+    push rbx
+    je trivial
+
+    push rbx
+    push -1
+    mul
+
+    push rcx
+    div
+
+    push 1
+    
+    out
+    out
+
+ret
+
+trivial:
+    push 0
+    push rcx
+    je inf
+
+    push 0
+    out
+ret
+
+inf:
+    push INFINITY
+    out
+ret
+
+get_discriminant:
+    push 4
+    push rax
+    mul
+    push rcx
+    mul
+
+    push rbx
+    dup
+    mul
+
+    sub
+    pop rdx
+ret
+
+quadratic_solution:
+    call get_discriminant
+
+    push 0
+    push rdx
+
+    jb no_solutions
+
+    push 0
+    push rdx
+    ja two_solutions
+
+    push 1
+    out
+
+    push rax
+    push 2
+    mul
+
+    push rbx
+    push -1
+    mul
+
+    div
+
+    out
+ret
+
+no_solutions:
+    push 0
+    out
+ret
+
+two_solutions:
+    push 2
+    out
+
+    push rax
+    push 2
+    mul
+    pop [0]
+
+    push rdx
+    sqrt
+    pop [1]
+
+    push rbx
+    push -1
+    mul
+    pop [2]
+
+    push [0]
+    push [1]
+    push [2]
+
+    add
+    div
+
+    push [0]
+    push [1]
+    push [2]
+
+    sub
+    div
+
+    out
+    out
+ret
+
+
+    
+
