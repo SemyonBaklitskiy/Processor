@@ -38,3 +38,12 @@ disassemble: bin/disassembler_main.o bin/disassembler_functions.o bin/common_fun
 
 clean:
 	rm bin/cpu_functions.o bin/cpu_main.o bin/stack_functions.o bin/run.exe bin/compiler_functions.o bin/compiler_main.o bin/compile.exe bin/common_functions.o bin/disassemble.exe bin/disassembler_main.o bin/disassembler_functions.o
+
+sanitizer: Stack/src/stack_functions.cpp Stack/includes/stack_functions.h CPU/src/cpu_functions.cpp CPU/includes/cpu_functions.h Common/src/common_functions.cpp Common/includes/common_functions.h Common/includes/common.h CPU/src/main.cpp
+	g++ -Wall -Wextra -fsanitize=address -ICommon/includes/ -c Common/src/common_functions.cpp -o bin/common_functions.o
+	g++ -Wall -Wextra -fsanitize=address -IStack/includes/ -c Stack/src/stack_functions.cpp -o bin/stack_functions.o
+	g++ -Wall -Wextra -fsanitize=address -IStack/includes/ -ICPU/includes/ -ICommon/includes/ -c CPU/src/cpu_functions.cpp -o bin/cpu_functions.o
+	g++ -Wall -Wextra -fsanitize=address -IStack/includes/ -ICPU/includes/ -ICommon/includes/ -c CPU/src/main.cpp -o bin/cpu_main.o
+	g++ -Wall -Wextra -fsanitize=address bin/cpu_main.o bin/cpu_functions.o bin/stack_functions.o bin/common_functions.o -o bin/sanitizer.exe
+	bin/./sanitizer.exe
+

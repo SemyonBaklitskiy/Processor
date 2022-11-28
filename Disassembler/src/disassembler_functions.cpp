@@ -9,7 +9,7 @@ static int comparator(const void* first, const void* second);
 static int find_label(const long unsigned int* labelsIp, const unsigned int amountOfLabels, const long unsigned int label);
 
 allErrors disassemble(const char* instructionsBuffer, const long unsigned int size, const char* outFilePath) {
-    if ((instructionsBuffer == NULL) || (outFilePath == NULL)) {
+    if ((instructionsBuffer == NULL) || (outFilePath == NULL)) { // TODO macro
         PRINT_ERROR(NULLPTR_COMMON);
         return NULLPTR_COMMON;
     }
@@ -152,7 +152,7 @@ allErrors disassemble(const char* instructionsBuffer, const long unsigned int si
 }
 
 static const char* reg_name(const int number) {
-    if (number == 0) {
+    if (number == 0) { // TODO switch-case
         return "null";
 
     } else if (number == 1) {

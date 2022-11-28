@@ -1,0 +1,38 @@
+in
+pop rax
+
+call factorial
+out
+hlt
+
+factorial:
+    push 0
+    push rax
+    jb error
+
+    push 0
+    push rax
+    je one
+
+    push 1
+    push rax
+    je one
+
+    push rax
+    dup
+
+    push -1
+    add
+    pop rax
+
+    call factorial
+    mul
+ret
+
+error:
+    push -1
+ret
+
+one:
+    push 1
+ret
