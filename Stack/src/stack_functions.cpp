@@ -7,7 +7,6 @@
 #define dump stack_dump(st, __FILE__, __PRETTY_FUNCTION__, __LINE__)
 #define my_assert_if(condition, error, arg) if (condition) {processor_of_errors(error, __FILE__, __PRETTY_FUNCTION__, __LINE__); return arg} 
 
-static void print_elements(int* buffer, FILE* stream, unsigned int capacity);
 static void print_elements(double* buffer, FILE* stream, unsigned int capacity);
 static void print_elements(elem_t* buffer, FILE* stream, unsigned int capacity);
 
@@ -66,18 +65,6 @@ static bool file_is_open(FILE* stream) {
         return false;
 
     return true;   
-}
-
-static void print_elements(int* buffer, FILE* stream, unsigned int capacity) {
-    my_assert_if(stream == NULL, NULLPTR, ;)
-
-#ifdef CANARY_PROT
-    for (unsigned int i = 0; i < capacity; ++i) 
-        fprintf(stream, "data[%d] = %d\n", i, *((int*)((char*)buffer + sizeof(canaryDefinition) + i * sizeof(int))));
-#else 
-    for (unsigned int i = 0; i < capacity; ++i) 
-        fprintf(stream, "data[%d] = %d\n", i, buffer[i]);
-#endif
 }
 
 static void print_elements(double* buffer, FILE* stream, unsigned int capacity) {

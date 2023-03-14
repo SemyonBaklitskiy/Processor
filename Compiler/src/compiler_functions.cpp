@@ -34,9 +34,10 @@ static int get_reg_number_and_immed(char* argument, int* immed, int* regNumber);
 static long int exe_buffer_size_and_check(char** array, const int sizeOfArray);
 
 char* get_buffer_compiler(const char* path) {
-    if (path == NULL) 
+    if (path == NULL) {
         PRINT_ERROR(NULLPTR_COMMON);
-    
+        return NULL;
+    }
 
     FILE* file = fopen(path, "r");
 
